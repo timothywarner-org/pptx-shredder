@@ -1,0 +1,45 @@
+# CODEOWNERS for PPTX Shredder
+# Defines code ownership and automatic review assignments
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global ownership - timothywarner owns everything by default
+* @timothywarner
+
+# Core application code - requires careful review
+/src/ @timothywarner
+
+# Critical configuration files
+/requirements.txt @timothywarner
+/requirements-dev.txt @timothywarner
+/config.yaml @timothywarner
+/pytest.ini @timothywarner
+
+# GitHub workflows and CI/CD - infrastructure critical
+/.github/ @timothywarner
+/.github/workflows/ @timothywarner
+/.github/dependabot.yml @timothywarner
+
+# Development environment configs
+/.vscode/ @timothywarner
+/.devcontainer/ @timothywarner
+/Makefile @timothywarner
+
+# Security and licensing
+/LICENSE @timothywarner
+/.gitignore @timothywarner
+
+# Documentation - can be more flexible but still needs oversight
+/docs/ @timothywarner
+/README.md @timothywarner
+/CLAUDE.md @timothywarner
+
+# Test files - important for quality
+/tests/ @timothywarner
+
+# Entry points - critical for functionality
+/shred.py @timothywarner
+
+# Note: CODEOWNERS works alongside the auto-assign workflow
+# - CODEOWNERS provides GitHub native review requests
+# - Auto-assign workflow adds intelligent categorization and AI review
+# - Together they ensure comprehensive review coverage
