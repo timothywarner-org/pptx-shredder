@@ -1,0 +1,43 @@
+{
+  "name": "@timothywarner/pptx-shredder-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for PPTX Shredder - Convert PowerPoint to LLM-optimized markdown",
+  "type": "module",
+  "bin": {
+    "pptx-shredder-mcp": "./bin/mcp-server.js"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "prepare": "npm run build"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "requirements.txt",
+    "config.yaml",
+    "mcp_server.py"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "powerpoint",
+    "markdown",
+    "llm",
+    "pptx",
+    "training",
+    "instructional-design"
+  ],
+  "author": "Timothy Warner <timothy@timothywarner.org>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timothywarner-org/pptx-shredder.git"
+  },
+  "homepage": "https://github.com/timothywarner-org/pptx-shredder",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

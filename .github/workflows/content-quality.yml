@@ -1,0 +1,328 @@
+name: Content Quality Check
+
+on:
+  # Run weekly on Mondays at 9 AM UTC
+  schedule:
+    - cron: '0 9 * * 1'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'Type of check to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - markdown-only
+          - urls-only
+
+  # Run on pull requests that modify markdown files
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'examples/**/*.md'
+      - 'docs/**/*.md'
+
+  # Run on pushes to main that modify markdown
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - 'examples/**/*.md'
+      - 'docs/**/*.md'
+
+jobs:
+  markdown-lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.check_type != 'urls-only' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install markdown linting tools
+        run: |
+          npm install -g markdownlint-cli2
+          npm install -g markdown-link-check
+
+      - name: Create markdownlint config
+        run: |
+          cat > .markdownlint.json << 'EOF'
+          {
+            "default": true,
+            "MD001": true,
+            "MD003": { "style": "atx" },
+            "MD004": { "style": "dash" },
+            "MD007": { "indent": 2 },
+            "MD009": { "br_spaces": 2 },
+            "MD010": { "code_blocks": false },
+            "MD012": { "maximum": 2 },
+            "MD013": { "line_length": 120, "code_blocks": false, "tables": false },
+            "MD018": true,
+            "MD019": true,
+            "MD022": true,
+            "MD023": true,
+            "MD024": { "allow_different_nesting": true },
+            "MD025": { "front_matter_title": "^\\s*title\\s*[:=]" },
+            "MD026": { "punctuation": ".,;:!?" },
+            "MD029": { "style": "ordered" },
+            "MD030": { "ul_single": 1, "ol_single": 1, "ul_multi": 1, "ol_multi": 1 },
+            "MD031": true,
+            "MD032": true,
+            "MD033": { "allowed_elements": ["br", "details", "summary", "sup", "sub"] },
+            "MD034": false,
+            "MD036": true,
+            "MD037": true,
+            "MD038": true,
+            "MD039": true,
+            "MD040": true,
+            "MD041": { "front_matter_title": "^\\s*title\\s*[:=]" },
+            "MD042": true,
+            "MD043": false,
+            "MD044": false,
+            "MD045": true,
+            "MD046": { "style": "fenced" },
+            "MD047": true,
+            "MD048": { "style": "backtick" },
+            "MD049": { "style": "underscore" },
+            "MD050": { "style": "asterisk" },
+            "MD051": true,
+            "MD052": true,
+            "MD053": true
+          }
+          EOF
+
+      - name: Lint markdown files
+        run: |
+          echo "🔍 Linting all markdown files for formatting issues..."
+          markdownlint-cli2 "**/*.md" "!node_modules/**" "!.git/**" || {
+            echo "❌ Markdown linting failed. Common issues:"
+            echo "   • Missing blank lines around headings"
+            echo "   • Missing blank lines around lists"
+            echo "   • Inconsistent heading styles"
+            echo "   • Long lines (>120 chars)"
+            echo "   • Trailing whitespace"
+            exit 1
+          }
+          echo "✅ All markdown files pass linting checks!"
+
+      - name: Check markdown formatting
+        run: |
+          echo "🔍 Checking for specific formatting issues..."
+          
+          # Check for missing blank lines before headings
+          echo "Checking blank lines before headings..."
+          if grep -rn --include="*.md" -B1 "^##\|^###\|^####" . | grep -v "^--$" | grep -v "^$" | grep -A1 -B1 "^[^-].*:.*[^#]$"; then
+            echo "❌ Found headings without blank lines before them"
+            exit 1
+          fi
+          
+          # Check for missing blank lines after headings  
+          echo "Checking blank lines after headings..."
+          if grep -rn --include="*.md" -A1 "^##\|^###\|^####" . | grep -v "^--$" | grep -A1 "^[^-]*\.md-[0-9]*-#" | grep -v "^$" | head -20; then
+            echo "⚠️  Found potential headings without blank lines after them"
+          fi
+          
+          # Check for missing blank lines around lists
+          echo "Checking blank lines around lists..."
+          if grep -rn --include="*.md" -B1 -A1 "^[-*+] \|^[0-9]\+\. " . | grep -v "^--$" | grep -B1 -A1 "^[^-]*\.md-[0-9]*-[-*+0-9]" | grep -v "^$" | head -10; then
+            echo "⚠️  Found potential list formatting issues"
+          fi
+          
+          echo "✅ Formatting checks completed!"
+
+  url-validation:
+    name: URL Validation
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.check_type != 'markdown-only' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install URL checking tools
+        run: |
+          npm install -g markdown-link-check
+          npm install -g broken-link-checker
+
+      - name: Create link check config
+        run: |
+          cat > .markdown-link-check.json << 'EOF'
+          {
+            "ignorePatterns": [
+              { "pattern": "^http://localhost" },
+              { "pattern": "^https://localhost" },
+              { "pattern": "^http://127.0.0.1" },
+              { "pattern": "^https://127.0.0.1" },
+              { "pattern": "^file://" },
+              { "pattern": "^#" }
+            ],
+            "replacementPatterns": [
+              {
+                "pattern": "^/",
+                "replacement": "https://github.com/timothywarner-org/pptx-shredder/blob/main/"
+              }
+            ],
+            "httpHeaders": [
+              {
+                "urls": ["https://github.com", "https://api.github.com"],
+                "headers": {
+                  "Accept": "application/vnd.github.v3+json",
+                  "User-Agent": "PPTX-Shredder-Link-Checker"
+                }
+              }
+            ],
+            "timeout": "10s",
+            "retryOn429": true,
+            "retryCount": 3,
+            "fallbackRetryDelay": "30s",
+            "aliveStatusCodes": [200, 206, 302, 304]
+          }
+          EOF
+
+      - name: Check links in markdown files
+        run: |
+          echo "🔗 Checking all URLs in markdown files..."
+          
+          # Create report file
+          echo "# URL Validation Report" > url-report.md
+          echo "Generated on: $(date)" >> url-report.md
+          echo "" >> url-report.md
+          
+          # Track results
+          total_files=0
+          failed_files=0
+          
+          # Check each markdown file
+          for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*"); do
+            echo "Checking: $file"
+            total_files=$((total_files + 1))
+            
+            if markdown-link-check "$file" --config .markdown-link-check.json; then
+              echo "✅ $file - All links valid" >> url-report.md
+            else
+              echo "❌ $file - Contains broken links" >> url-report.md
+              failed_files=$((failed_files + 1))
+            fi
+          done
+          
+          echo "" >> url-report.md
+          echo "## Summary" >> url-report.md
+          echo "- Total files checked: $total_files" >> url-report.md
+          echo "- Files with broken links: $failed_files" >> url-report.md
+          echo "- Success rate: $(( (total_files - failed_files) * 100 / total_files ))%" >> url-report.md
+          
+          # Display report
+          cat url-report.md
+          
+          # Fail if any broken links found
+          if [ $failed_files -gt 0 ]; then
+            echo "❌ Found broken links in $failed_files file(s)"
+            exit 1
+          fi
+          
+          echo "✅ All URLs are valid!"
+
+      - name: Upload URL report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: url-validation-report
+          path: url-report.md
+          retention-days: 30
+
+  content-quality-summary:
+    name: Content Quality Summary
+    runs-on: ubuntu-latest
+    needs: [markdown-lint, url-validation]
+    if: always()
+    
+    steps:
+      - name: Create quality summary
+        run: |
+          echo "# 📊 Content Quality Report" > quality-summary.md
+          echo "Generated on: $(date)" >> quality-summary.md
+          echo "" >> quality-summary.md
+          
+          # Check job results
+          if [ "${{ needs.markdown-lint.result }}" = "success" ]; then
+            echo "✅ **Markdown Linting**: All files pass formatting checks" >> quality-summary.md
+          else
+            echo "❌ **Markdown Linting**: Issues found with formatting" >> quality-summary.md
+          fi
+          
+          if [ "${{ needs.url-validation.result }}" = "success" ]; then
+            echo "✅ **URL Validation**: All links are valid" >> quality-summary.md
+          else
+            echo "❌ **URL Validation**: Broken links detected" >> quality-summary.md
+          fi
+          
+          echo "" >> quality-summary.md
+          echo "## 🛠️ Common Fixes" >> quality-summary.md
+          echo "" >> quality-summary.md
+          echo "### Markdown Formatting" >> quality-summary.md
+          echo "- Add blank lines before and after headings" >> quality-summary.md
+          echo "- Add blank lines before and after lists" >> quality-summary.md
+          echo "- Use consistent heading styles (ATX: #, ##, ###)" >> quality-summary.md
+          echo "- Keep lines under 120 characters" >> quality-summary.md
+          echo "- Remove trailing whitespace" >> quality-summary.md
+          echo "" >> quality-summary.md
+          echo "### URL Issues" >> quality-summary.md
+          echo "- Update redirected URLs to final destinations" >> quality-summary.md
+          echo "- Replace 404 links with archived versions or remove" >> quality-summary.md
+          echo "- Use HTTPS where available" >> quality-summary.md
+          echo "- Check for typos in URLs" >> quality-summary.md
+          
+          cat quality-summary.md
+
+      - name: Upload quality summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-quality-summary
+          path: quality-summary.md
+          retention-days: 90
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const markdownResult = '${{ needs.markdown-lint.result }}';
+            const urlResult = '${{ needs.url-validation.result }}';
+            
+            let comment = '## 📊 Content Quality Check Results\n\n';
+            
+            if (markdownResult === 'success') {
+              comment += '✅ **Markdown Linting**: All formatting checks passed\n';
+            } else {
+              comment += '❌ **Markdown Linting**: Formatting issues detected\n';
+            }
+            
+            if (urlResult === 'success') {
+              comment += '✅ **URL Validation**: All links are valid\n';
+            } else {
+              comment += '❌ **URL Validation**: Broken links found\n';
+            }
+            
+            comment += '\n📋 View detailed reports in the workflow artifacts.';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

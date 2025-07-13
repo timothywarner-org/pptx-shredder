@@ -16,16 +16,23 @@ This document explains how to set up the Model Context Protocol (MCP) server for
 
 ## Claude Desktop Configuration
 
-### Method 1: Using Claude Code CLI (Recommended)
+### Method 1: Global npm Package (Recommended)
 
-1. **Add the MCP server**:
+1. **Add the global MCP server** (works from any directory):
    ```bash
-   claude mcp add pptx-shredder python mcp_server.py --cwd /path/to/pptx-shredder
+   claude mcp add pptx-shredder npx -y @timothywarner/pptx-shredder-mcp
    ```
 
 2. **Verify the server is added**:
    ```bash
    claude mcp list
+   ```
+
+### Method 2: Local Development Setup
+
+1. **Add the local MCP server** (for development/testing):
+   ```bash
+   claude mcp add pptx-shredder-local python mcp_server.py --cwd /path/to/pptx-shredder
    ```
 
 ### Method 2: Manual Configuration

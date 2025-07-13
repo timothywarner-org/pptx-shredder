@@ -1,13 +1,18 @@
 {
   "mcpServers": {
-    "pptx-shredder": {
+    "pptx-shredder-local": {
       "command": "python",
       "args": ["mcp_server.py"],
       "cwd": ".",
-      "description": "PPTX Shredder - Convert PowerPoint presentations to LLM-optimized markdown",
+      "description": "PPTX Shredder (Local Development) - Convert PowerPoint presentations to LLM-optimized markdown",
       "env": {
         "PYTHONPATH": "."
       }
+    },
+    "pptx-shredder": {
+      "command": "npx",
+      "args": ["-y", "@timothywarner/pptx-shredder-mcp"],
+      "description": "PPTX Shredder (Global) - Convert PowerPoint presentations to LLM-optimized markdown"
     }
   }
 }

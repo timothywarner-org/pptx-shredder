@@ -1,0 +1,317 @@
+# Auto-assign reviewers for all PRs
+# Ensures code quality with GitHub Copilot and human oversight
+
+name: 👥 Auto-Assign Reviewers
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-assign:
+    name: 🎯 Assign Reviewers & Labels
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: 📋 Analyze PR Details
+        id: pr-analysis
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            const title = pr.title.toLowerCase();
+            const body = pr.body || '';
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            // Analyze PR characteristics
+            const isDependabot = author === 'dependabot[bot]';
+            const isCopilot = author.includes('copilot') || author.includes('github-actions');
+            const isDocumentation = files.data.every(file => 
+              file.filename.endsWith('.md') || 
+              file.filename.startsWith('docs/') ||
+              file.filename.includes('README')
+            );
+            const isTests = files.data.some(file => 
+              file.filename.startsWith('tests/') || 
+              file.filename.includes('test_')
+            );
+            const isCoreCode = files.data.some(file => 
+              file.filename.startsWith('src/') && 
+              file.filename.endsWith('.py')
+            );
+            const isConfig = files.data.every(file => 
+              file.filename.includes('.yml') || 
+              file.filename.includes('.yaml') || 
+              file.filename.includes('.json') || 
+              file.filename.includes('.toml') ||
+              file.filename.includes('.ini')
+            );
+            const isCI = files.data.some(file => 
+              file.filename.startsWith('.github/') ||
+              file.filename.includes('workflow')
+            );
+            
+            // Determine PR category
+            let category = 'general';
+            if (isDependabot) category = 'dependencies';
+            else if (isDocumentation) category = 'documentation';
+            else if (isCoreCode) category = 'core-code';
+            else if (isTests) category = 'testing';
+            else if (isConfig) category = 'configuration';
+            else if (isCI) category = 'ci-cd';
+            
+            // Determine review requirements
+            const needsHumanReview = isCoreCode || isCI || (!isDependabot && !isDocumentation);
+            const needsCopilotReview = isCoreCode || isTests || (!isDependabot);
+            
+            console.log(`PR Analysis:
+              Author: ${author}
+              Category: ${category}
+              Core code changes: ${isCoreCode}
+              Test changes: ${isTests}
+              Documentation only: ${isDocumentation}
+              Configuration only: ${isConfig}
+              CI/CD changes: ${isCI}
+              Needs human review: ${needsHumanReview}
+              Needs Copilot review: ${needsCopilotReview}
+            `);
+            
+            return {
+              author,
+              category,
+              isDependabot,
+              isCopilot,
+              isDocumentation,
+              isTests,
+              isCoreCode,
+              isConfig,
+              isCI,
+              needsHumanReview,
+              needsCopilotReview,
+              fileCount: files.data.length,
+              changedFiles: files.data.map(f => f.filename)
+            };
+
+      - name: 👥 Assign Reviewers
+        uses: actions/github-script@v7
+        env:
+          PR_ANALYSIS: ${{ steps.pr-analysis.outputs.result }}
+        with:
+          script: |
+            const analysis = JSON.parse(process.env.PR_ANALYSIS);
+            const reviewers = [];
+            const teamReviewers = [];
+            
+            // Always assign timothywarner for non-bot PRs
+            if (!analysis.isDependabot && !analysis.isCopilot && analysis.needsHumanReview) {
+              reviewers.push('timothywarner');
+            }
+            
+            // For Dependabot PRs, only assign for major changes or core code
+            if (analysis.isDependabot && (analysis.isCoreCode || analysis.category === 'ci-cd')) {
+              reviewers.push('timothywarner');
+            }
+            
+            // Note: GitHub Copilot review assignment would be done via team or organization settings
+            // For now, we'll use comments to trigger Copilot review
+            
+            if (reviewers.length > 0) {
+              try {
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.issue.number,
+                  reviewers: reviewers
+                });
+                console.log(`Assigned reviewers: ${reviewers.join(', ')}`);
+              } catch (error) {
+                console.log(`Error assigning reviewers: ${error.message}`);
+              }
+            }
+
+      - name: 🏷️ Add Smart Labels
+        uses: actions/github-script@v7
+        env:
+          PR_ANALYSIS: ${{ steps.pr-analysis.outputs.result }}
+        with:
+          script: |
+            const analysis = JSON.parse(process.env.PR_ANALYSIS);
+            const labels = [];
+            
+            // Category labels
+            switch (analysis.category) {
+              case 'dependencies':
+                labels.push('dependencies', 'auto-update');
+                break;
+              case 'documentation':
+                labels.push('documentation', 'low-risk');
+                break;
+              case 'core-code':
+                labels.push('core-functionality', 'needs-testing');
+                break;
+              case 'testing':
+                labels.push('testing', 'quality-improvement');
+                break;
+              case 'configuration':
+                labels.push('configuration', 'infrastructure');
+                break;
+              case 'ci-cd':
+                labels.push('ci-cd', 'infrastructure');
+                break;
+              default:
+                labels.push('general');
+            }
+            
+            // Priority labels based on content
+            if (analysis.isCoreCode) {
+              labels.push('high-priority');
+            } else if (analysis.isDocumentation || analysis.isConfig) {
+              labels.push('low-priority');
+            } else {
+              labels.push('medium-priority');
+            }
+            
+            // Review requirement labels
+            if (analysis.needsHumanReview) {
+              labels.push('needs-human-review');
+            }
+            
+            if (analysis.needsCopilotReview) {
+              labels.push('needs-ai-review');
+            }
+            
+            // Size labels
+            if (analysis.fileCount > 10) {
+              labels.push('large-pr');
+            } else if (analysis.fileCount > 5) {
+              labels.push('medium-pr');
+            } else {
+              labels.push('small-pr');
+            }
+            
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: labels
+              });
+              console.log(`Added labels: ${labels.join(', ')}`);
+            } catch (error) {
+              console.log(`Error adding labels: ${error.message}`);
+            }
+
+      - name: 🤖 Request Copilot Review
+        uses: actions/github-script@v7
+        env:
+          PR_ANALYSIS: ${{ steps.pr-analysis.outputs.result }}
+        with:
+          script: |
+            const analysis = JSON.parse(process.env.PR_ANALYSIS);
+            
+            if (analysis.needsCopilotReview && !analysis.isDependabot) {
+              const commentBody = `## 🤖 AI Code Review Request
+              
+**@github-copilot** Please review this PR for:
+
+${analysis.isCoreCode ? '- **Code Quality**: Check for potential bugs, performance issues, and best practices' : ''}
+${analysis.isTests ? '- **Test Coverage**: Verify test completeness and quality' : ''}
+${analysis.isCI ? '- **CI/CD**: Review workflow configuration and security' : ''}
+
+**Changed Files:**
+${analysis.changedFiles.map(f => \`- \${f}\`).join('\\n')}
+
+**Category:** ${analysis.category}
+**Priority:** ${analysis.isCoreCode ? 'High' : analysis.isDocumentation ? 'Low' : 'Medium'}
+
+Please provide feedback on:
+1. Code quality and potential improvements
+2. Security considerations  
+3. Performance implications
+4. Best practice adherence
+
+Thank you! 🚀`;
+
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: commentBody
+                });
+                console.log('Copilot review requested via comment');
+              } catch (error) {
+                console.log(`Error creating Copilot review comment: ${error.message}`);
+              }
+            }
+
+      - name: 📊 Add Review Summary
+        uses: actions/github-script@v7
+        env:
+          PR_ANALYSIS: ${{ steps.pr-analysis.outputs.result }}
+        with:
+          script: |
+            const analysis = JSON.parse(process.env.PR_ANALYSIS);
+            
+            const summaryComment = `## 📋 Auto-Review Assignment Summary
+            
+**PR Category:** ${analysis.category}
+**Files Changed:** ${analysis.fileCount}
+**Review Requirements:**
+- Human Review: ${analysis.needsHumanReview ? '✅ Required' : '⏭️ Optional'}
+- AI Review: ${analysis.needsCopilotReview ? '✅ Requested' : '⏭️ Skipped'}
+
+**Assigned Reviewers:**
+- 👤 **Human**: ${analysis.needsHumanReview ? '@timothywarner' : 'None needed'}
+- 🤖 **AI**: ${analysis.needsCopilotReview ? '@github-copilot (via comment)' : 'None needed'}
+
+**Key Changes:**
+${analysis.isCoreCode ? '- 🧠 Core functionality modifications' : ''}
+${analysis.isTests ? '- 🧪 Test suite updates' : ''}
+${analysis.isCI ? '- ⚙️ CI/CD workflow changes' : ''}
+${analysis.isDocumentation ? '- 📚 Documentation updates' : ''}
+${analysis.isConfig ? '- 🔧 Configuration changes' : ''}
+
+---
+*Automated by the PPTX Shredder review workflow* 🎯`;
+
+            // Only add summary for non-trivial PRs
+            if (!analysis.isDependabot || analysis.needsHumanReview) {
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: summaryComment
+                });
+                console.log('Review summary added');
+              } catch (error) {
+                console.log(`Error creating summary comment: ${error.message}`);
+              }
+            }
+
+      - name: 🔔 Slack Notification (Optional)
+        if: fromJSON(steps.pr-analysis.outputs.result).isCoreCode
+        uses: actions/github-script@v7
+        env:
+          PR_ANALYSIS: ${{ steps.pr-analysis.outputs.result }}
+        with:
+          script: |
+            // This is where you could add Slack/Teams notification
+            // for high-priority PRs affecting core functionality
+            const analysis = JSON.parse(process.env.PR_ANALYSIS);
+            console.log(`High-priority PR notification would be sent for: ${analysis.category}`);
+            // Add your notification logic here

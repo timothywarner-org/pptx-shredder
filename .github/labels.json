@@ -1,0 +1,244 @@
+[
+  {
+    "name": "help wanted",
+    "color": "008672",
+    "description": "Looking for community help and contributions"
+  },
+  {
+    "name": "good first issue",
+    "color": "7057ff",
+    "description": "Perfect for newcomers to the project"
+  },
+  {
+    "name": "good first PR",
+    "color": "7057ff", 
+    "description": "Ideal first pull request for new contributors"
+  },
+  {
+    "name": "hacktoberfest",
+    "color": "ff6b35",
+    "description": "Suitable for Hacktoberfest participation"
+  },
+  {
+    "name": "mentor available",
+    "color": "1d76db",
+    "description": "Maintainer available to guide contributors"
+  },
+
+  {
+    "name": "bug",
+    "color": "d73a4a",
+    "description": "Something isn't working correctly"
+  },
+  {
+    "name": "enhancement",
+    "color": "a2eeef",
+    "description": "Improvement to existing functionality"
+  },
+  {
+    "name": "feature",
+    "color": "0075ca",
+    "description": "New functionality or capability"
+  },
+  {
+    "name": "documentation",
+    "color": "0052cc",
+    "description": "Documentation updates or improvements"
+  },
+  {
+    "name": "refactor",
+    "color": "fbca04",
+    "description": "Code cleanup and restructuring"
+  },
+  {
+    "name": "performance",
+    "color": "ff9500",
+    "description": "Performance optimization and improvements"
+  },
+  {
+    "name": "security",
+    "color": "b60205",
+    "description": "Security-related issues or improvements"
+  },
+  {
+    "name": "dependencies",
+    "color": "0366d6",
+    "description": "Updates to dependencies or package management"
+  },
+  {
+    "name": "testing",
+    "color": "1a7f37",
+    "description": "Test-related changes or improvements"
+  },
+
+  {
+    "name": "component: extractor",
+    "color": "e1f5fe",
+    "description": "PPTX content extraction functionality"
+  },
+  {
+    "name": "component: formatter", 
+    "color": "f3e5f5",
+    "description": "Markdown formatting and chunking"
+  },
+  {
+    "name": "component: mcp-server",
+    "color": "fff3e0",
+    "description": "Model Context Protocol server integration"
+  },
+  {
+    "name": "component: cli",
+    "color": "e8f5e8",
+    "description": "Command-line interface and Rich UI"
+  },
+  {
+    "name": "component: tests",
+    "color": "f0f4ff",
+    "description": "Test suite and quality assurance"
+  },
+  {
+    "name": "component: ci/cd",
+    "color": "fef7e0",
+    "description": "Continuous integration and deployment"
+  },
+  {
+    "name": "component: docs",
+    "color": "fdf4ff",
+    "description": "Documentation and README files"
+  },
+
+  {
+    "name": "priority: critical",
+    "color": "b60205",
+    "description": "Urgent issue requiring immediate attention"
+  },
+  {
+    "name": "priority: high",
+    "color": "d93f0b",
+    "description": "High priority issue"
+  },
+  {
+    "name": "priority: medium",
+    "color": "fbca04",
+    "description": "Medium priority issue"
+  },
+  {
+    "name": "priority: low",
+    "color": "0e8a16",
+    "description": "Low priority issue"
+  },
+
+  {
+    "name": "size: xs",
+    "color": "c2e0c6",
+    "description": "Extra small change (< 1 hour)"
+  },
+  {
+    "name": "size: s",
+    "color": "7cfc00",
+    "description": "Small change (1-4 hours)"
+  },
+  {
+    "name": "size: m",
+    "color": "ffd700",
+    "description": "Medium change (4-8 hours)"
+  },
+  {
+    "name": "size: l",
+    "color": "ff8c00",
+    "description": "Large change (1-2 days)"
+  },
+  {
+    "name": "size: xl",
+    "color": "ff4500",
+    "description": "Extra large change (2+ days)"
+  },
+
+  {
+    "name": "status: blocked",
+    "color": "d4c5f9",
+    "description": "Blocked by another issue or dependency"
+  },
+  {
+    "name": "status: in-progress",
+    "color": "1f883d",
+    "description": "Currently being worked on"
+  },
+  {
+    "name": "status: needs-review",
+    "color": "fbca04",
+    "description": "Ready for review and feedback"
+  },
+  {
+    "name": "status: ready-to-merge",
+    "color": "0e8a16",
+    "description": "Approved and ready for merge"
+  },
+  {
+    "name": "status: on-hold",
+    "color": "d4c5f9",
+    "description": "Temporarily paused or postponed"
+  },
+
+  {
+    "name": "instructional-design",
+    "color": "ff6b35",
+    "description": "Related to learning objectives and educational patterns"
+  },
+  {
+    "name": "llm-optimization",
+    "color": "f7931e",
+    "description": "LLM compatibility and token optimization"
+  },
+  {
+    "name": "markdown-output",
+    "color": "0969da",
+    "description": "Markdown generation and formatting"
+  },
+  {
+    "name": "pptx-processing",
+    "color": "d73527",
+    "description": "PowerPoint file handling and extraction"
+  },
+  {
+    "name": "chunking-strategy",
+    "color": "8b5cf6",
+    "description": "Content chunking and segmentation logic"
+  },
+  {
+    "name": "metadata-extraction",
+    "color": "06b6d4",
+    "description": "YAML frontmatter and metadata handling"
+  },
+
+  {
+    "name": "question",
+    "color": "d876e3",
+    "description": "General questions about the project"
+  },
+  {
+    "name": "duplicate",
+    "color": "cfd3d7",
+    "description": "Duplicate issue or pull request"
+  },
+  {
+    "name": "invalid",
+    "color": "e4e669",
+    "description": "Invalid issue or pull request"
+  },
+  {
+    "name": "wontfix",
+    "color": "ffffff",
+    "description": "Issue will not be addressed"
+  },
+  {
+    "name": "breaking-change",
+    "color": "b60205",
+    "description": "Changes that break backward compatibility"
+  },
+  {
+    "name": "cross-platform",
+    "color": "0052cc",
+    "description": "Issues affecting Windows, macOS, or Linux compatibility"
+  }
+]

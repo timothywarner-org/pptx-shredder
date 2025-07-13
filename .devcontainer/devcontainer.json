@@ -1,0 +1,94 @@
+{
+    "name": "PPTX Shredder Dev Environment",
+    "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+    
+    // Speed optimizations
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    
+    // Essential features only for speed
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {
+            "ppa": true,
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "installDirectlyFromGitHubRelease": true,
+            "version": "latest"
+        }
+    },
+
+    // VS Code customizations
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.pylint", 
+                "ms-python.black-formatter",
+                "ms-python.isort",
+                "ms-python.mypy-type-checker",
+                "charliermarsh.ruff",
+                "tamasfe.even-better-toml",
+                "redhat.vscode-yaml",
+                "github.copilot",
+                "github.copilot-chat"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.terminal.activateEnvironment": false,
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "files.watcherExclude": {
+                    "**/.git/**": true,
+                    "**/node_modules/**": true,
+                    "**/__pycache__/**": true,
+                    "**/.pytest_cache/**": true
+                }
+            }
+        }
+    },
+
+    // Lightning-fast setup commands
+    "onCreateCommand": [
+        "bash", "-c", 
+        "pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt"
+    ],
+    
+    // Post-create optimizations
+    "postCreateCommand": [
+        "bash", "-c",
+        "chmod +x shred.py && echo 'export PYTHONPATH=/workspace/src:$PYTHONPATH' >> ~/.bashrc && echo '🎯 PPTX Shredder dev environment ready!' && python --version && pytest --version"
+    ],
+
+    // Container optimizations
+    "containerEnv": {
+        "PYTHONPATH": "/workspace/src",
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PIP_NO_CACHE_DIR": "1",
+        "PIP_DISABLE_PIP_VERSION_CHECK": "1"
+    },
+
+    // Forward ports for any future web interfaces
+    "forwardPorts": [],
+    
+    // Security & performance settings
+    "remoteUser": "vscode",
+    "containerUser": "vscode",
+    "updateRemoteUserUID": true,
+    
+    // Mounts for performance (avoid node_modules if they exist)
+    "mounts": [
+        "source=${localWorkspaceFolder}/.vscode,target=/workspace/.vscode,type=bind,consistency=cached"
+    ],
+
+    // Faster startup
+    "shutdownAction": "stopContainer",
+    "overrideCommand": false,
+    
+    // Essential runtime args for performance
+    "runArgs": [
+        "--init",
+        "--memory=2g",
+        "--cpus=2"
+    ]
+}
