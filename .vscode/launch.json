@@ -1,0 +1,132 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🎯 Run PPTX Shredder",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/shred.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": []
+        },
+        {
+            "name": "🔍 Debug PPTX Shredder (Dry Run)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/shred.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": ["--dry-run", "--verbose"]
+        },
+        {
+            "name": "🗂️ Debug with Sample File",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/shred.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": ["${input:sampleFile}", "--verbose"]
+        },
+        {
+            "name": "🧪 Run All Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": ["tests/", "-v", "--tb=short"]
+        },
+        {
+            "name": "🔬 Run Tests with Coverage",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": ["tests/", "-v", "--cov=src", "--cov-report=html", "--cov-report=term-missing"]
+        },
+        {
+            "name": "⚡ Debug Single Test",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": ["${input:testFile}", "-v", "-s"]
+        },
+        {
+            "name": "🏃‍♂️ Quick Test (No Coverage)",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": ["tests/", "-x", "--tb=line"]
+        },
+        {
+            "name": "📊 Debug Extractor Only",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/extractor.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "args": ["${input:pptxFile}"]
+        },
+        {
+            "name": "🎨 Debug Formatter Only", 
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/formatter.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "sampleFile",
+            "description": "Path to PPTX file",
+            "default": "input/azure_storage_training.pptx",
+            "type": "promptString"
+        },
+        {
+            "id": "testFile", 
+            "description": "Test file to run",
+            "default": "tests/test_extractor.py",
+            "type": "promptString"
+        },
+        {
+            "id": "pptxFile",
+            "description": "PPTX file for extractor debugging",
+            "default": "input/azure_storage_training.pptx",
+            "type": "promptString"
+        }
+    ]
+}
