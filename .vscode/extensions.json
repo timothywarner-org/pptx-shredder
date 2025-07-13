@@ -1,0 +1,17 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.mypy-type-checker",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "ms-python.debugpy",
+        "njpwerner.autodocstring",
+        "littlefoxteam.vscode-python-test-adapter",
+        "github.copilot",
+        "github.copilot-chat"
+    ]
+}
