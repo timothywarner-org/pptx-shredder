@@ -1,0 +1,123 @@
+# Dependabot configuration for PPTX Shredder
+# Optimized for Python projects with security-first approach
+
+version: 2
+updates:
+  # Main Python dependencies (requirements.txt)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    target-branch: "main"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "timothywarner"
+    assignees:
+      - "timothywarner"
+    labels:
+      - "dependencies"
+      - "python"
+      - "auto-update"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    # Security updates get immediate attention
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    # Group related updates to reduce PR noise
+    groups:
+      # Core runtime dependencies
+      core-runtime:
+        patterns:
+          - "python-pptx"
+          - "pyyaml"
+          - "click"
+          - "rich"
+          - "tiktoken"
+        update-types:
+          - "minor"
+          - "patch"
+      # Development and testing tools  
+      dev-tools:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "pylint"
+          - "mypy"
+          - "pre-commit"
+        update-types:
+          - "minor"
+          - "patch"
+      # Security updates (always separate PRs for visibility)
+      security-patches:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+    # Ignore problematic updates
+    ignore:
+      # Major version updates need manual review
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # Known problematic versions (add as needed)
+      # - dependency-name: "package-name"
+      #   versions: ["x.y.z"]
+
+  # GitHub Actions (keep workflows updated)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "first-monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    target-branch: "main"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "timothywarner"
+    assignees:
+      - "timothywarner"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "workflow"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Docker dependencies (for devcontainer)
+  - package-ecosystem: "docker"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "monthly"
+      day: "second-monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    target-branch: "main"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "timothywarner"
+    assignees:
+      - "timothywarner"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "devcontainer"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    # Only update base images monthly to avoid churn
+    allow:
+      - dependency-type: "direct"
