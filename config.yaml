@@ -1,0 +1,52 @@
+# PPTX Shredder Configuration
+
+# Chunking Strategy
+chunking:
+  strategy: "instructional"  # or "sequential", "module-based"
+  max_tokens: 2000
+  overlap_tokens: 100
+
+# Module Detection
+module_markers:
+  - "Module"
+  - "Section"
+  - "Chapter"
+  - "Unit"
+  - "Lesson"
+  - "Part"
+  - "Topic"
+  - "Agenda"
+  - "Overview"
+
+# Content Processing
+content:
+  include_speaker_notes: true
+  preserve_code_blocks: true
+  detect_language: true
+  include_slide_numbers: true
+
+# Output Format
+output:
+  format: "markdown"  # Future: "json", "yaml"
+  include_metadata: true
+  frontmatter_format: "yaml"
+  filename_pattern: "{original_name}_{module_id}.md"
+
+# Instructional Patterns
+instructional:
+  detect_objectives: true
+  detect_assessments: true
+  detect_activities: true
+  activity_markers:
+    - "Lab"
+    - "Exercise"
+    - "Practice"
+    - "Demo"
+    - "Try it"
+    - "Hands-on"
+    - "Activity"
+    - "Assignment"
+    - "Quiz"
+    - "Test"
+    - "Assessment"
+    - "Review"
