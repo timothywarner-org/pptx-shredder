@@ -1,0 +1,157 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🚀 Quick Start",
+            "type": "shell",
+            "command": "python",
+            "args": ["shred.py", "--dry-run"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}/src"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🧪 Run All Tests",
+            "type": "shell", 
+            "command": "python",
+            "args": ["-m", "pytest", "tests/", "-v"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}/src"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🏃‍♂️ Quick Tests",
+            "type": "shell",
+            "command": "python", 
+            "args": ["-m", "pytest", "tests/", "-x", "--tb=line"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always", 
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}/src"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "📊 Coverage Report",
+            "type": "shell",
+            "command": "python",
+            "args": ["-m", "pytest", "tests/", "--cov=src", "--cov-report=html", "--cov-report=term-missing"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}/src"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🎨 Format Code",
+            "type": "shell",
+            "command": "black",
+            "args": ["src/", "tests/", "--line-length=88"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🔍 Lint Code", 
+            "type": "shell",
+            "command": "pylint",
+            "args": ["src/"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🏗️ Build & Test",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "🎨 Format Code",
+                "🔍 Lint Code", 
+                "🧪 Run All Tests"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🧹 Clean Cache",
+            "type": "shell",
+            "command": "find",
+            "args": [".", "-type", "d", "-name", "__pycache__", "-exec", "rm", "-rf", "{}", "+", "2>/dev/null", "||", "true"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "📦 Install Dependencies",
+            "type": "shell",
+            "command": "pip",
+            "args": ["install", "-r", "requirements.txt", "-r", "requirements-dev.txt"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
