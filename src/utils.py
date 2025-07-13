@@ -64,20 +64,54 @@ def is_pptx_file(file_path: str) -> bool:
 
 
 def sanitize_filename(filename: str) -> str:
-    """Sanitize filename for cross-platform compatibility."""
-    # Remove or replace problematic characters
+    """Sanitize filename for cross-platform compatibility and enterprise standards."""
+    import re
+    
+    if not filename:
+        return "untitled.md"
+    
+    # Remove file extension temporarily to process name part
+    name_part, ext = os.path.splitext(filename)
+    if not ext:
+        ext = ".md"  # Default extension
+    
+    # Replace problematic characters for Windows, macOS, and Linux
     invalid_chars = '<>:"/\\|?*'
     for char in invalid_chars:
-        filename = filename.replace(char, '_')
+        name_part = name_part.replace(char, '_')
     
-    # Remove extra whitespace and normalize
-    filename = ' '.join(filename.split())
+    # Replace Unicode control characters and non-printable characters
+    name_part = re.sub(r'[\x00-\x1f\x7f-\x9f]', '_', name_part)
     
-    # Limit length
-    if len(filename) > 100:
-        filename = filename[:100]
+    # Replace multiple spaces/underscores with single underscore
+    name_part = re.sub(r'[\s_]+', '_', name_part)
     
-    return filename
+    # Remove leading/trailing spaces, dots, and underscores
+    name_part = name_part.strip(' ._')
+    
+    # Ensure name doesn't start with a dot (hidden file on Unix)
+    if name_part.startswith('.'):
+        name_part = 'file' + name_part
+    
+    # Check for Windows reserved names
+    windows_reserved = {
+        'CON', 'PRN', 'AUX', 'NUL',
+        'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+        'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+    }
+    if name_part.upper() in windows_reserved:
+        name_part = f"file_{name_part}"
+    
+    # Limit length (Windows has 260 char total path limit, be conservative)
+    max_name_length = 150 - len(ext)
+    if len(name_part) > max_name_length:
+        name_part = name_part[:max_name_length].rstrip('_')
+    
+    # Ensure we have a valid name
+    if not name_part:
+        name_part = "untitled"
+    
+    return name_part + ext
 
 
 def count_tokens_rough(text: str) -> int:

@@ -17,6 +17,7 @@ except ImportError:
     TIKTOKEN_AVAILABLE = False
 
 from .extractor import SlideData
+from .utils import sanitize_filename
 
 
 @dataclass
@@ -77,7 +78,9 @@ class MarkdownFormatter:
             chunk.chunk_index = i + 1
             chunk.total_chunks = total_chunks
             
-            filename = f"{presentation_name}_{chunk.module_id}.md"
+            # Create filename with proper sanitization
+            raw_filename = f"{presentation_name}_{chunk.module_id}.md"
+            filename = sanitize_filename(raw_filename)
             content = self._generate_markdown(chunk)
             markdown_files[filename] = content
         
