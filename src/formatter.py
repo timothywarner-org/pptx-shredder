@@ -16,8 +16,8 @@ try:
 except ImportError:
     TIKTOKEN_AVAILABLE = False
 
-from .extractor import SlideData
-from .utils import sanitize_filename
+from extractor import SlideData
+from utils import sanitize_filename
 
 
 @dataclass

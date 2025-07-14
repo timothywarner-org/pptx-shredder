@@ -1,3 +1,6 @@
+# Tim's stuff
+dev
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -206,6 +209,10 @@ dist
 # Generated output files (preserve examples and README)
 output/*.md
 !output/README.md
+
+# Proprietary training content
+input/*.pptx
+!input/README.md
 
 # Test output and temporary files
 test_output/

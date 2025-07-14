@@ -163,7 +163,7 @@ class PPTXExtractor:
         for shape in slide.shapes:
             if hasattr(shape, 'text') and shape.text.strip():
                 # Check if shape is positioned like a title (top 25% of slide)
-                if hasattr(shape, 'top') and shape.top < slide.slide_height * 0.25:
+                if hasattr(shape, 'top') and shape.top < self.presentation.slide_height * 0.25:
                     title_candidates.append((shape.text.strip(), shape.top))
         
         if title_candidates:
@@ -471,7 +471,7 @@ class PPTXExtractor:
         return visual_elements
     
     def _extract_structured_content(self, slide) -> Dict[str, Any]:
-        \"\"\"Extract content with preserved structure and formatting.\"\"\"
+        """Extract content with preserved structure and formatting."""
         structured = {
             'lists': [],
             'emphasized_text': [],
@@ -504,7 +504,7 @@ class PPTXExtractor:
         return structured
     
     def _extract_assessment_items(self, content: List[str], speaker_notes: str) -> List[Dict[str, str]]:
-        \"\"\"Extract quiz questions, assessments, and knowledge checks.\"\"\"
+        """Extract quiz questions, assessments, and knowledge checks."""
         assessment_items = []
         all_text = ' '.join(content) + ' ' + speaker_notes
         
@@ -530,7 +530,7 @@ class PPTXExtractor:
         return assessment_items
     
     def _extract_compliance_markers(self, content: List[str], speaker_notes: str) -> List[str]:
-        \"\"\"Extract compliance and certification related markers.\"\"\"
+        """Extract compliance and certification related markers."""
         compliance_items = []
         all_text = ' '.join(content + [speaker_notes]).lower()
         
@@ -541,7 +541,7 @@ class PPTXExtractor:
         return list(set(compliance_items))  # Remove duplicates
     
     def _detect_slide_layout(self, slide) -> str:
-        \"\"\"Detect the semantic layout type of the slide.\"\"\"
+        """Detect the semantic layout type of the slide."""
         shape_types = [shape.shape_type for shape in slide.shapes]
         
         # Simple layout detection based on content

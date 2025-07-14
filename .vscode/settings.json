@@ -20,7 +20,7 @@
     ],
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true
+        "source.organizeImports": "explicit"
     },
     "files.associations": {
         "*.pptx": "zip",
@@ -70,5 +70,6 @@
         "requirements.txt": "requirements-dev.txt",
         "pytest.ini": ".coverage, htmlcov",
         "*.py": "${capture}.pyc"
-    }
+    },
+    "sarif-viewer.connectToGithubCodeScanning": "off"
 }
