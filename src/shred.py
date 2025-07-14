@@ -17,8 +17,8 @@ from rich.table import Table
 from rich.logging import RichHandler
 import logging
 
-from extractor import PPTXExtractor
-from formatter import MarkdownFormatter
+from intelligent_extractor import IntelligentPPTXExtractor
+from intelligent_formatter import IntelligentMarkdownFormatter
 from utils import is_pptx_file, sanitize_filename
 
 # Set up rich logging
@@ -170,18 +170,18 @@ def _process_files(files: List[Path], output_path: Path, strategy: str, chunk_si
             file_task = progress.add_task(f"[blue]Processing {file_path.name}...", total=100)
             
             try:
-                # Extract content
-                progress.update(file_task, advance=20, description=f"[blue]Extracting {file_path.name}...")
-                extractor = PPTXExtractor(str(file_path))
-                slides_data = extractor.extract()
+                # Extract content using intelligent extractor
+                progress.update(file_task, advance=20, description=f"[blue]🧠 Intelligent extraction {file_path.name}...")
+                extractor = IntelligentPPTXExtractor(str(file_path), use_llm=True)
+                slides_data = extractor.extract_all_slides()
                 total_slides_processed += len(slides_data)
                 
                 if verbose:
                     logger.info(f"Extracted {len(slides_data)} slides from {file_path.name}")
                 
-                # Format to markdown
+                # Format to markdown using intelligent formatter
                 progress.update(file_task, advance=30, description=f"[blue]Formatting {file_path.name}...")
-                formatter = MarkdownFormatter(strategy=strategy, chunk_size=chunk_size)
+                formatter = IntelligentMarkdownFormatter(chunk_size=chunk_size)
                 markdown_files = formatter.format(slides_data, file_path.stem)
                 total_chunks_created += len(markdown_files)
                 

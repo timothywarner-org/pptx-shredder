@@ -1,0 +1,191 @@
+[
+  {
+    "content": {
+      "slide_number": 1,
+      "title": null,
+      "text_content": [
+        "Administer GHAS in GitHub Enterprise Cloud",
+        "Tim Warner",
+        "Principal Author  |  IT Ops  |  Pluralsight",
+        "TechTrainerTim.com",
+        "Enable GHAS in GitHub Enterprise Cloud"
+      ],
+      "speaker_notes": "",
+      "bullet_points": [],
+      "tables": [],
+      "images": [
+        {
+          "type": "image",
+          "position": "(1033174, 7105955)",
+          "size": "2066544x2066544"
+        }
+      ],
+      "charts": [],
+      "layout_name": "Course Title Slide",
+      "slide_size": {
+        "width": 18288000,
+        "height": 10287000
+      }
+    },
+    "structure": {
+      "is_module_start": false,
+      "module_title": null,
+      "learning_objectives": [],
+      "prerequisites": [],
+      "activity_type": "overview",
+      "difficulty_level": "beginner",
+      "estimated_time_minutes": 1,
+      "instructional_notes": "LLM analysis completed",
+      "content_summary": "Slide introduces the topic of administering GHAS in GitHub Enterprise Cloud, presented by Tim Warner, Principal Author in IT Ops at Pluralsight."
+    }
+  },
+  {
+    "content": {
+      "slide_number": 2,
+      "title": null,
+      "text_content": [
+        "Identify prerequisites for enabling GHAS in GitHub Enterprise Cloud",
+        "Enable GHAS at both the enterprise and organization levels",
+        "Apply GHAS policies to roll out security features across your repositories",
+        "Validate GHAS features to confirm all features are active"
+      ],
+      "speaker_notes": "Module Layout:\u00a0\nExplain how you will be teaching the learning objectives and incorporating your storyline. List and describe any demos, learning activities or exercise files you will be using.\n\u000bScenario Setup (2 min): Three acquired companies with conflicting security practices\nOrganization Policies (4 min):\nSecurity settings deep dive\nMandatory vs recommended configs\nPolicy templates\nRepository Baselines (3 min):\nBranch protection as enforcement\nRequired status checks\nException handling\nReusable Workflows (3 min):\nWorkflow templates for security\nCentralized management patterns\nVersion control strategies\nCompliance Tracking (3 min):\nSecurity overview navigation\nAPI queries for reporting\nAutomated compliance checks",
+      "bullet_points": [],
+      "tables": [],
+      "images": [],
+      "charts": [],
+      "layout_name": "Introduction",
+      "slide_size": {
+        "width": 18288000,
+        "height": 10287000
+      }
+    },
+    "structure": {
+      "is_module_start": false,
+      "module_title": null,
+      "learning_objectives": [
+        "Identify prerequisites for enabling GHAS in GitHub Enterprise Cloud",
+        "Enable GHAS at both the enterprise and organization levels",
+        "Apply GHAS policies to roll out security features across your repositories"
+      ],
+      "prerequisites": [],
+      "activity_type": "overview",
+      "difficulty_level": "intermediate",
+      "estimated_time_minutes": 10,
+      "instructional_notes": "LLM analysis completed",
+      "content_summary": "This slide outlines the learning objectives for enabling and applying GitHub Advanced Security (GHAS) features in GitHub Enterprise Cloud, focusing on prerequisites, enabling at different levels, and policy application."
+    }
+  },
+  {
+    "content": {
+      "slide_number": 3,
+      "title": "\u201cMedTech Corp just lost $5.2M from exposed AWS keys. That could've been us.\u201d",
+      "text_content": [
+        "The Million-dollar Wake-up Call",
+        "Elena Rodriguez, VP of Engineering, Globomantics Robotics Division"
+      ],
+      "speaker_notes": "",
+      "bullet_points": [],
+      "tables": [],
+      "images": [
+        {
+          "type": "image",
+          "position": "(15514466, -71336)",
+          "size": "2547836x2547836"
+        }
+      ],
+      "charts": [],
+      "layout_name": "Important Statement - Pink",
+      "slide_size": {
+        "width": 18288000,
+        "height": 10287000
+      }
+    },
+    "structure": {
+      "is_module_start": false,
+      "module_title": null,
+      "learning_objectives": [],
+      "prerequisites": [],
+      "activity_type": "overview",
+      "difficulty_level": "intermediate",
+      "estimated_time_minutes": 5,
+      "instructional_notes": "LLM analysis completed",
+      "content_summary": "The slide highlights a real-world incident where MedTech Corp lost $5.2M due to exposed AWS keys, serving as a cautionary tale for the audience. It features a title emphasizing the financial impact and a subtitle introducing the speaker, Elena Rodriguez, VP of Engineering at Globomantics Robotics Division."
+    }
+  },
+  {
+    "content": {
+      "slide_number": 4,
+      "title": "Your Mission in 15 Minutes",
+      "text_content": [
+        "Transform 500+ repos from vulnerable to protected",
+        "Prerequisites",
+        "Navigation",
+        "Enablement",
+        "Verification"
+      ],
+      "speaker_notes": "Here\u2019s the mission: take 500+ repos from vulnerable to protected in under 15 minutes.\nThis isn\u2019t theory. This is real-world GitHub Enterprise work. And we\u2019re breaking it down into four clean steps.\nPrerequisites: Do you have the right GHAS licenses? Admin perms? Basic hygiene stuff.\nNavigation: You need to know where GHAS lives in the UI and CLI\u2014GitHub hides the good stuff.\nEnablement: This is the heart of it. One script, one GraphQL mutation, and suddenly your fleet is secure.\nVerification: Trust but verify. We\u2019ll check the rollout actually took, both visually and via CLI.\nThat\u2019s the flow. Fast, surgical, repeatable. Let\u2019s get to it.",
+      "bullet_points": [],
+      "tables": [],
+      "images": [],
+      "charts": [],
+      "layout_name": "Title Only - With Background",
+      "slide_size": {
+        "width": 18288000,
+        "height": 10287000
+      }
+    },
+    "structure": {
+      "is_module_start": true,
+      "module_title": "Your Mission in 15 Minutes",
+      "learning_objectives": [
+        "Transform 500+ repos from vulnerable to protected in under 15 minutes"
+      ],
+      "prerequisites": [
+        "Prerequisites",
+        "Navigation"
+      ],
+      "activity_type": "overview",
+      "difficulty_level": "intermediate",
+      "estimated_time_minutes": 15,
+      "instructional_notes": "LLM analysis completed",
+      "content_summary": "Introduction to a mission involving transforming 500+ repositories from vulnerable to protected in under 15 minutes, broken down into four steps."
+    }
+  },
+  {
+    "content": {
+      "slide_number": 5,
+      "title": "GHAS Prerequisites Validated",
+      "text_content": [
+        "GitHub Enterprise Cloud (GHEC) licenses",
+        "GitHub Advanced Security (GHAS) licenses",
+        "Admin access"
+      ],
+      "speaker_notes": "",
+      "bullet_points": [],
+      "tables": [],
+      "images": [],
+      "charts": [],
+      "layout_name": "Three Item List with Icons",
+      "slide_size": {
+        "width": 18288000,
+        "height": 10287000
+      }
+    },
+    "structure": {
+      "is_module_start": false,
+      "module_title": null,
+      "learning_objectives": [],
+      "prerequisites": [
+        "GitHub Enterprise Cloud (GHEC) licenses",
+        "GitHub Advanced Security (GHAS) licenses",
+        "Admin access"
+      ],
+      "activity_type": "overview",
+      "difficulty_level": "beginner",
+      "estimated_time_minutes": 2,
+      "instructional_notes": "LLM analysis completed",
+      "content_summary": "This slide lists the prerequisites needed for GitHub Advanced Security (GHAS), including necessary licenses and admin access."
+    }
+  }
+]

@@ -41,10 +41,20 @@ class SlideData:
 class PPTXExtractor:
     """Extracts content from PowerPoint presentations with instructional design awareness."""
     
-    # Keywords that indicate the start of a new module/section
+    # Keywords that indicate the start of a new module/section (enterprise training focused)
     MODULE_MARKERS = [
-        'module', 'section', 'chapter', 'unit', 'lesson', 
-        'part', 'topic', 'agenda', 'overview'
+        'module', 'section', 'chapter', 'unit', 'lesson', 'part', 'topic', 'agenda', 'overview',
+        'phase', 'step', 'stage', 'milestone', 'objective', 'demo', 'workshop', 'session',
+        'lab', 'exercise', 'hands-on', 'practice', 'activity', 'scenario', 'case study',
+        'walkthrough', 'tutorial', 'deep dive', 'checkpoint'
+    ]
+    
+    # Numbered module patterns
+    MODULE_NUMBER_PATTERNS = [
+        r'(?:module|section|chapter|unit|lesson|part|topic|phase|step)\s*\d+',
+        r'\d+\.\s*(?:module|section|chapter|unit|lesson|part|topic|phase|step)',
+        r'(?:step|phase)\s+[ivx]+',  # Roman numerals
+        r'^\d+[\.\)]\s+'  # Simple numbered items
     ]
     
     # Keywords that indicate learning activities (enterprise training focused)
@@ -110,27 +120,104 @@ class PPTXExtractor:
         return slides_data
     
     def _extract_slide(self, slide, slide_number: int) -> SlideData:
-        """Extract content from a single slide with comprehensive pedagogical analysis."""
-        title = self._extract_title(slide)
-        content = self._extract_content(slide)
-        speaker_notes = self._extract_speaker_notes(slide)
-        code_blocks = self._extract_code_blocks(slide)
-        
-        # Analyze slide for instructional patterns
-        is_module_start = self._is_module_start(title, content)
-        learning_objectives = self._extract_learning_objectives(content, speaker_notes)
-        activity_type = self._detect_activity_type(title, content)
-        
-        # Enhanced pedagogical extraction
-        instructor_notes = self._categorize_instructor_notes(speaker_notes)
-        prerequisites = self._extract_prerequisites(content, speaker_notes)
-        difficulty_level = self._assess_difficulty_level(title, content, speaker_notes)
-        estimated_time = self._estimate_slide_time(content, speaker_notes, activity_type)
-        visual_elements = self._extract_visual_elements(slide)
-        structured_content = self._extract_structured_content(slide)
-        assessment_items = self._extract_assessment_items(content, speaker_notes)
-        compliance_markers = self._extract_compliance_markers(content, speaker_notes)
-        slide_layout_type = self._detect_slide_layout(slide)
+        """Extract content from a single slide with robust error handling."""
+        try:
+            title = self._extract_title(slide)
+            content = self._extract_content(slide)
+            speaker_notes = self._extract_speaker_notes(slide)
+            
+            # Validate minimum content
+            if not title and not content and not speaker_notes:
+                title = f"Slide {slide_number}"
+                content = ["[Slide content could not be extracted]"]
+            
+            # Extract with individual error handling
+            try:
+                code_blocks = self._extract_code_blocks(slide)
+            except Exception:
+                code_blocks = []
+            
+            try:
+                is_module_start = self._is_module_start(title, content)
+            except Exception:
+                is_module_start = False
+            
+            try:
+                learning_objectives = self._extract_learning_objectives(content, speaker_notes)
+            except Exception:
+                learning_objectives = []
+            
+            try:
+                activity_type = self._detect_activity_type(title, content)
+            except Exception:
+                activity_type = None
+            
+            try:
+                instructor_notes = self._categorize_instructor_notes(speaker_notes)
+            except Exception:
+                instructor_notes = {}
+            
+            try:
+                prerequisites = self._extract_prerequisites(content, speaker_notes)
+            except Exception:
+                prerequisites = []
+            
+            try:
+                difficulty_level = self._assess_difficulty_level(title, content, speaker_notes)
+            except Exception:
+                difficulty_level = 'beginner'
+            
+            try:
+                estimated_time = self._estimate_slide_time(content, speaker_notes, activity_type)
+            except Exception:
+                estimated_time = 2  # Default 2 minutes
+            
+            try:
+                visual_elements = self._extract_visual_elements(slide)
+            except Exception:
+                visual_elements = []
+            
+            try:
+                structured_content = self._extract_structured_content(slide)
+            except Exception:
+                structured_content = {'lists': [], 'emphasized_text': [], 'headings': [], 'layout_sections': []}
+            
+            try:
+                assessment_items = self._extract_assessment_items(content, speaker_notes)
+            except Exception:
+                assessment_items = []
+            
+            try:
+                compliance_markers = self._extract_compliance_markers(content, speaker_notes)
+            except Exception:
+                compliance_markers = []
+            
+            try:
+                slide_layout_type = self._detect_slide_layout(slide)
+            except Exception:
+                slide_layout_type = 'standard-content'
+                
+        except Exception as e:
+            # Critical error - return minimal viable slide data
+            return SlideData(
+                slide_number=slide_number,
+                title=f"Slide {slide_number} (Extraction Failed)",
+                content=["[Content extraction failed]"],
+                speaker_notes="",
+                code_blocks=[],
+                is_module_start=False,
+                learning_objectives=[],
+                activity_type=None,
+                instructor_notes={},
+                prerequisites=[],
+                difficulty_level='beginner',
+                estimated_time=2,
+                visual_elements=[],
+                structured_content={'lists': [], 'emphasized_text': [], 'headings': [], 'layout_sections': []},
+                assessment_items=[],
+                compliance_markers=[],
+                slide_layout_type='standard-content'
+            )
         
         return SlideData(
             slide_number=slide_number,
@@ -286,33 +373,95 @@ class PPTXExtractor:
         return 'text'  # Default fallback
     
     def _is_module_start(self, title: Optional[str], content: List[str]) -> bool:
-        """Determine if slide marks the start of a new module/section."""
+        """Enhanced module detection with fuzzy matching and content analysis."""
         if not title:
             return False
         
-        title_lower = title.lower()
-        return any(marker in title_lower for marker in self.MODULE_MARKERS)
+        title_lower = title.lower().strip()
+        
+        # Check for explicit module markers
+        if any(marker in title_lower for marker in self.MODULE_MARKERS):
+            return True
+        
+        # Check for numbered patterns
+        for pattern in self.MODULE_NUMBER_PATTERNS:
+            if re.search(pattern, title_lower):
+                return True
+        
+        # Check content for module indicators
+        all_text = ' '.join(content).lower()
+        module_content_indicators = [
+            'learning objectives', 'what you will learn', 'in this module', 'module overview',
+            'objectives:', 'goals:', 'by the end', 'after completing', 'you will be able',
+            'agenda', 'outline', 'topics covered'
+        ]
+        
+        if any(indicator in all_text for indicator in module_content_indicators):
+            return True
+        
+        # Special case: if slide has very little content and seems like a section divider
+        if len(title_lower.split()) <= 5 and len(all_text) < 100:
+            # Check for section-like patterns
+            section_patterns = [
+                r'part\s+\d+', r'section\s+\d+', r'chapter\s+\d+',
+                r'introduction', r'getting started', r'overview',
+                r'conclusion', r'summary', r'wrap.?up'
+            ]
+            if any(re.search(pattern, title_lower) for pattern in section_patterns):
+                return True
+        
+        return False
     
     def _extract_learning_objectives(self, content: List[str], speaker_notes: str) -> List[str]:
-        """Extract learning objectives from slide content and speaker notes."""
+        """Extract learning objectives with robust, inclusive patterns."""
         objectives = []
         all_text = ' '.join(content) + ' ' + speaker_notes
         
-        # Look for common objective patterns
+        # Focused, high-quality patterns for learning objectives
         objective_patterns = [
-            r'(?:objective|goal|aim|learn|understand|be able to)[s]?[:\-]?\s*(.+)',
-            r'(?:by the end|after this|upon completion)[^.]*you (?:will|should)[^.]*(.+)',
-            r'(?:students will|learners will|you will)[^.]*(.+)'
+            # Explicit objective statements with proper context
+            r'(?:learning\s+objectives?|objectives?|goals?)[:\s]*\n?[•\-\*]?\s*([A-Z][^.\n!?]{15,120})',
+            
+            # "You will" patterns with action verbs
+            r'(?:you|students?|learners?|participants?)\s+(?:will|can|should)\s+(?:be\s+able\s+to\s+)?(learn|understand|identify|demonstrate|explain|configure|implement|analyze|create|evaluate|apply|assess|manage|administer|deploy|troubleshoot|validate|enable)\s+([^.\n!?]{10,100})',
+            
+            # "After this" clear completion patterns
+            r'(?:by\s+the\s+end\s+of\s+this|after\s+completing\s+this|upon\s+completion)[^.\n!?]*?(?:you|students?|learners?)\s+(?:will|should)\s+(?:be\s+able\s+to\s+)?([^.\n!?]{15,100})',
+            
+            # Bullet point objectives with action verbs
+            r'[•\-\*]\s*(?:Be\s+able\s+to\s+|Learn\s+to\s+|Understand\s+how\s+to\s+)?([A-Z][a-z]+\s+(?:GHAS|GitHub|security|policies|features|access|requirements)[^•\-\*\n]{10,80})',
+            
+            # Clear instructional outcomes
+            r'(?:learning\s+outcomes?|outcomes?)[:\s]*[•\-\*]\s*([A-Z][^•\-\*\n]{15,100})'
         ]
         
         for pattern in objective_patterns:
             matches = re.finditer(pattern, all_text, re.IGNORECASE | re.MULTILINE)
             for match in matches:
-                objective = match.group(1).strip()
-                if len(objective) > 10:  # Filter out very short matches
-                    objectives.append(objective)
+                objective = match.group(1).strip() if match.lastindex else match.group(0).strip()
+                
+                # More lenient filtering
+                if (8 <= len(objective) <= 150 and 
+                    not objective.lower().startswith(('ing ', '. ', 'the ', 'and ', 'or ')) and
+                    objective.count(' ') >= 1):  # At least 2 words
+                    
+                    # Clean up common artifacts
+                    objective = re.sub(r'^(?:and\s+|or\s+)', '', objective, flags=re.IGNORECASE)
+                    objective = objective.strip('.,!?')
+                    
+                    if len(objective) > 5:
+                        objectives.append(objective)
         
-        return objectives
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_objectives = []
+        for obj in objectives:
+            obj_clean = obj.lower().strip('.,!? ')
+            if obj_clean not in seen and len(obj_clean) > 5:
+                seen.add(obj_clean)
+                unique_objectives.append(obj)
+        
+        return unique_objectives[:8]  # Allow more objectives to be captured
     
     def _detect_activity_type(self, title: Optional[str], content: List[str]) -> Optional[str]:
         """Detect the type of learning activity represented by the slide."""
@@ -363,25 +512,71 @@ class PPTXExtractor:
         return {k: v for k, v in categories.items() if v}
     
     def _extract_prerequisites(self, content: List[str], speaker_notes: str) -> List[str]:
-        """Extract prerequisite knowledge from content and notes."""
+        """Extract prerequisites with robust, inclusive patterns."""
         prerequisites = []
         all_text = ' '.join(content) + ' ' + speaker_notes
         
-        # Patterns for prerequisite detection
+        # Simplified, more inclusive patterns
         prereq_patterns = [
-            r'(?:prerequisite|requirement|need to know|should know|familiar with)[s]?[:\-]?\s*(.+)',
-            r'(?:before|prior to|first)[^.]*(?:understand|know|learn)[^.]*(.+)',
-            r'(?:assumes?|assuming)[^.]*(?:knowledge|experience)[^.]*(.+)'
+            # Direct requirements (no punctuation requirement)
+            r'(?:requires?|needs?|must\s+have|should\s+have)\s+([^.\n!?]{5,80})',
+            r'(?:prerequisite|requirement)[s]?[:\s]*([^.\n!?]{5,80})',
+            
+            # Experience/Knowledge patterns
+            r'(?:experience|familiarity|knowledge)\s+(?:with|of|in)\s+([^.\n!?]{5,80})',
+            r'(?:prior|previous)\s+(?:experience|knowledge|familiarity)\s+(?:with|of|in)\s+([^.\n!?]{5,80})',
+            
+            # Access patterns (common in enterprise)
+            r'(?:admin|administrator|administrative)\s+(?:access|permissions?|rights?)',
+            r'(?:access\s+to|permissions?\s+(?:for|to))\s+([^.\n!?]{5,80})',
+            
+            # License patterns
+            r'(?:licens[es]*|subscription)\s+(?:for|to|of)\s+([^.\n!?]{5,80})',
+            r'(?:GHAS|GitHub\s+Advanced\s+Security)\s+licens[es]*',
+            
+            # Basic/fundamental requirements
+            r'(?:basic|fundamental|working)\s+(?:understanding|knowledge|familiarity)\s+(?:of|with)\s+([^.\n!?]{5,80})',
+            
+            # Before starting patterns
+            r'before\s+(?:starting|beginning|taking)[^.\n!?]*?(?:you|students?)\s+(?:should|must|need)[^.\n!?]*?([^.\n!?]{8,80})',
+            
+            # Assumes patterns
+            r'(?:assumes?|assuming)\s+(?:you\s+have\s+|that\s+you\s+have\s+|)?([^.\n!?]{8,80})',
+            
+            # Simple bullet patterns
+            r'[•\-\*]\s*([^•\-\*\n]*(?:license|access|permission|experience|knowledge|understanding|familiarity)[^•\-\*\n]*)',
         ]
         
         for pattern in prereq_patterns:
-            matches = re.finditer(pattern, all_text, re.IGNORECASE)
+            matches = re.finditer(pattern, all_text, re.IGNORECASE | re.MULTILINE)
             for match in matches:
-                prereq = match.group(1).strip()
-                if len(prereq) > 5 and len(prereq) < 100:  # Reasonable length
+                if match.lastindex and match.lastindex >= 1:
+                    prereq = match.group(1).strip()
+                else:
+                    prereq = match.group(0).strip()
+                
+                # Clean up common prefixes and suffixes
+                prereq = re.sub(r'^(?:prerequisite|requirement)[s]?[:\-]?\s*', '', prereq, flags=re.IGNORECASE)
+                prereq = re.sub(r'^(?:you\s+(?:should\s+)?have\s+)', '', prereq, flags=re.IGNORECASE)
+                prereq = prereq.strip('.,!? ')
+                
+                # More lenient validation
+                if (5 <= len(prereq) <= 100 and 
+                    not prereq.lower().startswith(('for ', 'in ', 'of ', 'to ', 'and ', 'or ', 'the ')) and
+                    prereq.count(' ') >= 0):  # Allow single words for licenses, etc.
+                    
                     prerequisites.append(prereq)
         
-        return prerequisites[:3]  # Limit to top 3
+        # Remove duplicates and clean up
+        seen = set()
+        unique_prereqs = []
+        for prereq in prerequisites:
+            prereq_clean = prereq.lower().strip()
+            if prereq_clean not in seen and len(prereq_clean) > 3:
+                seen.add(prereq_clean)
+                unique_prereqs.append(prereq)
+        
+        return unique_prereqs[:5]  # Allow more prerequisites
     
     def _assess_difficulty_level(self, title: Optional[str], content: List[str], speaker_notes: str) -> str:
         """Assess the difficulty level of the slide content."""
@@ -434,7 +629,7 @@ class PPTXExtractor:
         return min(estimated_minutes, 45)  # Cap at 45 minutes
     
     def _extract_visual_elements(self, slide) -> List[Dict[str, str]]:
-        """Extract information about visual elements on the slide."""
+        """Extract detailed information about visual elements on the slide."""
         visual_elements = []
         
         for shape in slide.shapes:
@@ -443,32 +638,142 @@ class PPTXExtractor:
             if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
                 element = {
                     'type': 'image',
-                    'description': 'Image content (extraction not yet implemented)',
-                    'position': f'top={getattr(shape, "top", 0)}, left={getattr(shape, "left", 0)}'
+                    'description': self._describe_image_context(shape, slide),
+                    'position': f'top={getattr(shape, "top", 0)}, left={getattr(shape, "left", 0)}',
+                    'size': f'width={getattr(shape, "width", 0)}, height={getattr(shape, "height", 0)}'
                 }
             elif shape.shape_type == MSO_SHAPE_TYPE.TABLE:
+                table_info = self._extract_table_info(shape)
                 element = {
                     'type': 'table',
-                    'description': f'Table with {getattr(shape.table, "rows", "unknown")} rows' if hasattr(shape, 'table') else 'Table structure',
-                    'data': 'Table data extraction pending'
+                    'description': table_info['description'],
+                    'data': table_info['summary'],
+                    'structure': table_info['structure']
                 }
             elif shape.shape_type == MSO_SHAPE_TYPE.CHART:
+                chart_info = self._extract_chart_info(shape)
                 element = {
                     'type': 'chart',
-                    'description': 'Chart or graph',
-                    'chart_type': 'Chart type detection pending'
+                    'description': chart_info['description'],
+                    'chart_type': chart_info['chart_type'],
+                    'data_summary': chart_info['data_summary']
                 }
             elif shape.shape_type == MSO_SHAPE_TYPE.DIAGRAM:
                 element = {
                     'type': 'diagram',
-                    'description': 'Diagram or SmartArt',
-                    'content': 'Diagram content extraction pending'
+                    'description': 'SmartArt diagram or flowchart',
+                    'content': 'Process flow or conceptual diagram'
                 }
+            elif hasattr(shape, 'text') and shape.text.strip():
+                # Text boxes with special formatting
+                text_content = shape.text.strip()
+                if len(text_content) < 100 and any(keyword in text_content.lower() for keyword in ['screenshot', 'figure', 'diagram', 'example', 'demo']):
+                    element = {
+                        'type': 'caption',
+                        'description': f'Text caption: {text_content}',
+                        'content': text_content
+                    }
             
             if element:
                 visual_elements.append(element)
         
         return visual_elements
+    
+    def _describe_image_context(self, shape, slide) -> str:
+        """Generate contextual description for images based on surrounding content."""
+        # Look for nearby text that might describe the image
+        surrounding_text = []
+        
+        if hasattr(shape, 'top') and hasattr(shape, 'left'):
+            shape_top = getattr(shape, 'top', 0)
+            shape_left = getattr(shape, 'left', 0)
+            
+            # Find text shapes near this image
+            for other_shape in slide.shapes:
+                if (hasattr(other_shape, 'text') and other_shape.text.strip() and 
+                    hasattr(other_shape, 'top') and hasattr(other_shape, 'left')):
+                    
+                    other_top = getattr(other_shape, 'top', 0)
+                    other_left = getattr(other_shape, 'left', 0)
+                    
+                    # Check if text is near the image (rough proximity)
+                    if (abs(other_top - shape_top) < 100000 or  # Near vertically
+                        abs(other_left - shape_left) < 100000):   # Near horizontally
+                        text = other_shape.text.strip()
+                        if len(text) < 200 and any(keyword in text.lower() for keyword in ['screenshot', 'figure', 'example', 'diagram', 'ui', 'interface', 'demo', 'console', 'terminal']):
+                            surrounding_text.append(text)
+        
+        if surrounding_text:
+            return f"Image with context: {' | '.join(surrounding_text[:2])}"
+        else:
+            # Generic description based on slide context
+            slide_title = self._extract_title(slide)
+            if slide_title:
+                title_lower = slide_title.lower()
+                if 'github' in title_lower:
+                    return "GitHub interface screenshot or diagram"
+                elif any(term in title_lower for term in ['command', 'cli', 'terminal']):
+                    return "Command line interface or terminal screenshot"
+                elif 'demo' in title_lower:
+                    return "Demonstration screenshot or workflow diagram"
+                elif any(term in title_lower for term in ['overview', 'architecture', 'structure']):
+                    return "System architecture or overview diagram"
+            
+            return "Technical diagram, screenshot, or instructional image"
+    
+    def _extract_table_info(self, shape) -> Dict[str, str]:
+        """Extract meaningful information from table shapes."""
+        if not hasattr(shape, 'table'):
+            return {
+                'description': 'Data table',
+                'summary': 'Table structure not accessible',
+                'structure': 'Unknown dimensions'
+            }
+        
+        table = shape.table
+        rows = len(table.rows) if hasattr(table, 'rows') else 0
+        cols = len(table.columns) if hasattr(table, 'columns') else 0
+        
+        # Try to extract some sample content
+        sample_content = []
+        try:
+            if rows > 0 and cols > 0:
+                # Get first row (likely headers)
+                first_row_text = []
+                for cell in table.rows[0].cells:
+                    if hasattr(cell, 'text') and cell.text.strip():
+                        first_row_text.append(cell.text.strip())
+                
+                if first_row_text:
+                    sample_content = first_row_text[:3]  # First 3 headers
+        except:
+            pass
+        
+        description = f"Data table with {rows} rows and {cols} columns"
+        if sample_content:
+            description += f" (columns: {', '.join(sample_content)})"
+        
+        return {
+            'description': description,
+            'summary': f"Tabular data with {rows}x{cols} structure",
+            'structure': f"{rows} rows × {cols} columns"
+        }
+    
+    def _extract_chart_info(self, shape) -> Dict[str, str]:
+        """Extract information about chart elements."""
+        # Basic chart type detection would require more complex analysis
+        # For now, provide contextual description
+        
+        chart_type = "data visualization"
+        description = "Chart or graph showing data relationships"
+        data_summary = "Quantitative data presentation"
+        
+        # Could be enhanced with chart.xml analysis in future
+        return {
+            'description': description,
+            'chart_type': chart_type,
+            'data_summary': data_summary
+        }
     
     def _extract_structured_content(self, slide) -> Dict[str, Any]:
         """Extract content with preserved structure and formatting."""

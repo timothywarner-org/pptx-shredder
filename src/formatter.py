@@ -87,45 +87,62 @@ class MarkdownFormatter:
         return markdown_files
     
     def _chunk_by_instructional_patterns(self, slides_data: List[SlideData]) -> List[ChunkData]:
-        """Chunk slides based on instructional design patterns."""
+        """Chunk slides based on instructional design patterns with improved module boundary detection."""
         chunks = []
         current_chunk_slides = []
         current_module_title = "Introduction"
         module_counter = 1
+        current_module_slides = []  # Track all slides in current module
         
-        for slide in slides_data:
+        for i, slide in enumerate(slides_data):
             # Check if this slide starts a new module
             if slide.is_module_start and current_chunk_slides:
-                # Finalize current chunk  
-                chunk = self._create_chunk(current_chunk_slides, current_module_title, module_counter, len(chunks) + 1, 0)  # Will update total later
-                chunks.append(chunk)
+                # Finalize current module chunks
+                module_chunks = self._finalize_module_chunks(current_module_slides, current_module_title, module_counter)
+                chunks.extend(module_chunks)
                 
-                # Start new chunk
+                # Start new module
+                current_module_slides = [slide]
                 current_chunk_slides = [slide]
                 current_module_title = slide.title or f"Module {module_counter + 1}"
                 module_counter += 1
             else:
                 current_chunk_slides.append(slide)
+                current_module_slides.append(slide)
                 
-                # Check if chunk is getting too large
+                # Only break for token limits if we're not near a natural module boundary
                 if self._estimate_chunk_tokens(current_chunk_slides) > self.chunk_size:
-                    # Find a good break point
-                    break_point = self._find_break_point(current_chunk_slides)
+                    # Look ahead for module boundaries to avoid awkward splits
+                    next_module_distance = self._distance_to_next_module(slides_data, i)
                     
-                    # Create chunk up to break point
-                    chunk_slides = current_chunk_slides[:break_point]
-                    chunk = self._create_chunk(chunk_slides, current_module_title, module_counter, len(chunks) + 1, 0)  # Will update total later
-                    chunks.append(chunk)
+                    if next_module_distance < 3:  # If next module is very close, wait
+                        continue
                     
-                    # Continue with remaining slides
-                    current_chunk_slides = current_chunk_slides[break_point:]
-                    current_module_title = f"Module {module_counter + 1} (Continued)"
-                    module_counter += 1
+                    # Find optimal break point within current module
+                    break_point = self._find_optimal_break_point(current_chunk_slides)
+                    
+                    if break_point > 0:
+                        # Create chunk up to break point
+                        chunk_slides = current_chunk_slides[:break_point]
+                        chunk_title = current_module_title
+                        if len([s for s in current_module_slides if s in chunk_slides]) < len(current_module_slides):
+                            chunk_title = f"{current_module_title} (Part {len(chunks) - sum(1 for c in chunks if c.module_title.startswith(current_module_title.split(' (')[0])) + 1})"
+                        
+                        chunk = self._create_chunk(chunk_slides, chunk_title, module_counter, len(chunks) + 1, 0)
+                        chunks.append(chunk)
+                        
+                        # Continue with remaining slides in current module
+                        current_chunk_slides = current_chunk_slides[break_point:]
         
-        # Handle final chunk
-        if current_chunk_slides:
-            chunk = self._create_chunk(current_chunk_slides, current_module_title, module_counter, len(chunks) + 1, 0)  # Will update total later
-            chunks.append(chunk)
+        # Handle final module
+        if current_module_slides:
+            module_chunks = self._finalize_module_chunks(current_module_slides, current_module_title, module_counter)
+            chunks.extend(module_chunks)
+        
+        # Update total chunk counts
+        for i, chunk in enumerate(chunks):
+            chunk.chunk_index = i + 1
+            chunk.total_chunks = len(chunks)
         
         return chunks
     
@@ -241,9 +258,9 @@ class MarkdownFormatter:
         # Enhanced duration estimation
         estimated_duration = self._format_duration(total_estimated_time)
         
-        # Create learning context for LLM understanding
+        # Create learning context for LLM understanding (fix sequence position)
         learning_context = {
-            'module_sequence_position': f"{chunk_index} of {total_chunks}",
+            'module_sequence_position': f"{chunk_index} of {total_chunks}" if total_chunks > 0 else f"{chunk_index} of [TBD]",
             'primary_learning_mode': self._determine_learning_mode(slides),
             'cognitive_load': self._assess_cognitive_load(slides),
             'interaction_level': self._assess_interaction_level(slides),
@@ -486,6 +503,69 @@ class MarkdownFormatter:
         
         # Fallback: break at 75% of chunk to leave room for overlap
         return max(1, int(len(slides) * 0.75))
+    
+    def _distance_to_next_module(self, slides_data: List[SlideData], current_index: int) -> int:
+        """Calculate distance to next module boundary."""
+        for i in range(current_index + 1, len(slides_data)):
+            if slides_data[i].is_module_start:
+                return i - current_index
+        return float('inf')  # No more modules
+    
+    def _find_optimal_break_point(self, slides: List[SlideData]) -> int:
+        """Find optimal break point considering instructional flow."""
+        if len(slides) <= 1:
+            return 0
+        
+        # Prefer breaking at activity transitions
+        for i in range(len(slides) - 1, 0, -1):
+            if (slides[i].activity_type and 
+                slides[i].activity_type != slides[i-1].activity_type and
+                slides[i-1].activity_type in ['demonstration', 'hands-on-lab', 'assessment']):
+                return i
+        
+        # Prefer breaking after assessment or demo slides
+        for i in range(len(slides) - 1, 0, -1):
+            if slides[i-1].activity_type in ['assessment', 'demonstration', 'knowledge-check']:
+                return i
+        
+        # Fallback: break at 75% but ensure we don't break too early
+        return max(2, int(len(slides) * 0.75))
+    
+    def _finalize_module_chunks(self, module_slides: List[SlideData], module_title: str, module_number: int) -> List[ChunkData]:
+        """Create chunks for a complete module, respecting token limits."""
+        if not module_slides:
+            return []
+        
+        chunks = []
+        current_slides = []
+        part_number = 1
+        
+        for slide in module_slides:
+            current_slides.append(slide)
+            
+            # Check if we need to split this module
+            if self._estimate_chunk_tokens(current_slides) > self.chunk_size and len(current_slides) > 1:
+                # Find good break point within module
+                break_point = self._find_optimal_break_point(current_slides)
+                
+                if break_point > 0:
+                    # Create chunk for this part
+                    chunk_slides = current_slides[:break_point]
+                    chunk_title = module_title if part_number == 1 else f"{module_title} (Part {part_number})"
+                    chunk = self._create_chunk(chunk_slides, chunk_title, module_number, 0, 0)  # Will update indices later
+                    chunks.append(chunk)
+                    
+                    # Continue with remaining slides
+                    current_slides = current_slides[break_point:]
+                    part_number += 1
+        
+        # Handle final part of module
+        if current_slides:
+            chunk_title = module_title if part_number == 1 else f"{module_title} (Part {part_number})"
+            chunk = self._create_chunk(current_slides, chunk_title, module_number, 0, 0)  # Will update indices later
+            chunks.append(chunk)
+        
+        return chunks
     
     def _generate_markdown(self, chunk: ChunkData) -> str:
         """Generate enterprise-grade markdown optimized for LLM comprehension."""

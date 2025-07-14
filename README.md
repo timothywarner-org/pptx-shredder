@@ -30,31 +30,38 @@ claude mcp add pptx-shredder npx -y @timothywarner/pptx-shredder-mcp
 # "Use shred_pptx to process my presentation.pptx"
 ```
 
-## 🧠 How It Works
+## 🧠 How It Works (Now with AI!)
+
+**NEW: Intelligent Extraction with DeepSeek LLM** 🤖
 
 ```mermaid
 flowchart TD
     A[📁 Drop PPTX in input/] --> B[🚀 Run python shred.py]
-    B --> C[🔍 Extract Content]
-    C --> D[📝 Text & Speaker Notes]
-    C --> E[🎯 Learning Objectives]
-    C --> F[💻 Code Blocks]
-    D --> G[🧩 Smart Chunking]
-    E --> G
-    F --> G
-    G --> H[📋 Add YAML Metadata]
-    H --> I[📄 Generate Markdown]
-    I --> J[📂 Save to output/]
+    B --> C[🔍 PowerPoint Object Model]
+    C --> D[📝 Structured Content Extract]
+    D --> E[🧠 DeepSeek LLM Analysis]
+    E --> F[🎯 Learning Objectives Detection]
+    E --> G[📚 Module Boundary Recognition]
+    E --> H[🏷️ Activity Type Classification]
+    E --> I[⏱️ Time Estimation]
+    F --> J[🧩 Intelligent Chunking]
+    G --> J
+    H --> J
+    I --> J
+    J --> K[📋 Rich YAML Metadata]
+    K --> L[📄 High-Quality Markdown]
+    L --> M[📂 Save to output/]
     
-    K[🖥️ Claude Desktop<br/>Any Directory] --> L[📦 npx @timothywarner/<br/>pptx-shredder-mcp]
-    L --> M[🔌 MCP Server]
-    M --> B
+    N[🖥️ Claude Desktop<br/>Any Directory] --> O[📦 npx @timothywarner/<br/>pptx-shredder-mcp]
+    O --> P[🔌 MCP Server]
+    P --> B
     
     style A fill:#e1f5fe
-    style J fill:#e8f5e8
-    style K fill:#fff3e0
-    style L fill:#e8f0ff
-    style G fill:#f3e5f5
+    style M fill:#e8f5e8
+    style N fill:#fff3e0
+    style O fill:#e8f0ff
+    style E fill:#ff9800
+    style J fill:#f3e5f5
 ```
 
 ## 📁 Project Structure
@@ -72,8 +79,10 @@ pptx-shredder/                 🏠 Main project directory
 │   └── mcp-server.js        ← Node.js wrapper for global access
 │
 ├── 📂 src/                   🧠 Core application logic
-│   ├── 🔍 extractor.py      ← PPTX → content extraction
-│   ├── ✨ formatter.py      ← Content → markdown + chunking
+│   ├── 🔍 extractor.py      ← Legacy PPTX extraction (regex-based)
+│   ├── 🤖 intelligent_extractor.py ← NEW: AI-powered extraction
+│   ├── ✨ formatter.py      ← Legacy markdown formatting  
+│   ├── 🧠 intelligent_formatter.py ← NEW: AI-optimized formatting
 │   ├── 🎛️ shred.py          ← CLI interface with Rich UI
 │   └── 🛠️ utils.py          ← Helpers & token counting
 │
@@ -336,6 +345,48 @@ make watch
 # Build and test
 make all
 ```
+
+## 🎯 Recent Improvements (v0.2.0)
+
+### 🤖 Intelligent Extraction System
+- **Replaced regex-based extraction** with PowerPoint object model + DeepSeek LLM
+- **Learning objectives detection** now uses semantic understanding instead of pattern matching
+- **Module boundary recognition** identifies instructional structure automatically
+- **Activity type classification** (lecture, demo, lab, assessment, etc.)
+- **Time estimation** based on content complexity and activity type
+- **Prerequisites extraction** from both content and speaker notes
+
+### 🧠 AI-Powered Analysis
+- Uses **DeepSeek API** for instructional design inference
+- Structured content extraction via PPTX object model
+- Intelligent chunking based on pedagogical flow
+- Rich YAML frontmatter with 20+ metadata fields
+
+### 📊 Quality Improvements
+- Fixed malformed docstrings and syntax errors
+- Enhanced error handling and robust slide processing
+- Proper import resolution for modular architecture
+- Cross-platform compatibility maintained
+
+## 📋 Outstanding TODOs
+
+### Performance Optimization
+- [ ] **Batch DeepSeek API calls** - Currently 1 call per slide (slow for large presentations)
+- [ ] **Implement caching** - Cache LLM responses for similar slide patterns
+- [ ] **Parallel processing** - Process multiple slides concurrently
+- [ ] **Fallback modes** - Graceful degradation when API unavailable
+
+### Feature Enhancements  
+- [ ] **Multi-language support** - Detect and handle non-English content
+- [ ] **Custom LLM providers** - Support OpenAI, Anthropic, local models
+- [ ] **Export formats** - Add JSON, HTML, and SCORM output options
+- [ ] **Template system** - Customizable markdown templates for different use cases
+
+### Enterprise Features
+- [ ] **Batch directory processing** - Process entire folder hierarchies
+- [ ] **Git integration** - Track changes across presentation versions
+- [ ] **Compliance tracking** - Enhanced detection of regulatory markers
+- [ ] **Quality metrics** - Automated assessment of content quality
 
 ### Content Quality
 ```bash
